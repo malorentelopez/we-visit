@@ -29,12 +29,15 @@
 
 html {
   height: 100%;
+  /* Solid fill so iOS PWA status-bar / overscroll never flash white. */
+  background-color: var(--bg0);
 }
 
 html,
 body {
   min-height: 100%;
   min-height: 100dvh;
+  min-height: -webkit-fill-available;
 }
 
 body {
@@ -43,11 +46,13 @@ body {
   flex-direction: column;
   color: var(--ink);
   font-family: var(--font-body);
-  background:
+  background-color: var(--bg0);
+  background-image:
     radial-gradient(1200px 600px at 10% -10%, rgba(242, 143, 74, 0.22), transparent 55%),
     radial-gradient(900px 500px at 100% 0%, rgba(126, 200, 180, 0.18), transparent 50%),
     linear-gradient(165deg, var(--bg0), var(--bg1) 45%, #0c2421);
-  background-attachment: fixed;
+  /* fixed backgrounds leave white gaps in iOS standalone PWAs */
+  background-attachment: scroll;
 }
 
 
@@ -237,6 +242,14 @@ select {
   color: var(--ink);
 }
 
+/* Notch / home-indicator insets for standalone iOS (status bar is translucent). */
+.app-shell {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
 .visit-shell {
   width: 100%;
   max-width: 32rem;
@@ -244,10 +257,7 @@ select {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  padding:
-    max(0.85rem, env(safe-area-inset-top))
-    1rem
-    max(1.5rem, env(safe-area-inset-bottom));
+  padding: 0.85rem 1rem 1.5rem;
 }
 
 .visit-top {
@@ -588,6 +598,353 @@ select {
 
 .rise {
   animation: rise 420ms ease both;
+}
+
+/* —— Home —— */
+.home {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 0.75rem 1.15rem 1.5rem;
+  overflow: hidden;
+}
+
+.home__chrome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.home__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+}
+
+.home__lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.home__lang select {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  outline: none;
+  cursor: pointer;
+}
+
+.home__hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1.75rem;
+}
+
+.home__path {
+  position: absolute;
+  right: -1rem;
+  top: -0.25rem;
+  width: min(72%, 16rem);
+  opacity: 0.55;
+  pointer-events: none;
+  color: color-mix(in srgb, var(--accent-2) 55%, transparent);
+}
+
+.home__path-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.home__path-line {
+  animation: home-dash 12s linear infinite;
+}
+
+@keyframes home-dash {
+  to {
+    stroke-dashoffset: -160;
+  }
+}
+
+.home__mark {
+  width: 4.25rem;
+  height: 4.25rem;
+  margin-bottom: 0.85rem;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.28));
+  animation: pop 520ms ease both;
+}
+
+.home__brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 11vw, 3.6rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  color: var(--ink);
+}
+
+.home__tagline {
+  margin: 0.7rem 0 0;
+  max-width: 16rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.home__search-block {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 1.75rem;
+  transition: transform 220ms ease;
+}
+
+.home__search-block[data-focused="true"] {
+  transform: translateY(-2px);
+}
+
+.home-search {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 3.65rem;
+  padding: 0.55rem 0.85rem 0.55rem 1rem;
+  border-radius: 1.35rem;
+  border: 1px solid color-mix(in srgb, var(--accent-2) 35%, var(--line));
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--panel) 88%, #000),
+      color-mix(in srgb, var(--bg1) 80%, transparent)
+    );
+  box-shadow:
+    0 0 0 1px rgba(242, 143, 74, 0.08),
+    0 18px 40px rgba(0, 0, 0, 0.28);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease;
+}
+
+.home__search-block[data-focused="true"] .home-search {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent),
+    0 22px 48px rgba(0, 0, 0, 0.34);
+}
+
+.home-search__icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  color: var(--accent);
+}
+
+.home-search__input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.home-search__input::placeholder {
+  color: color-mix(in srgb, var(--muted) 85%, transparent);
+  font-weight: 600;
+}
+
+.home-search__hint {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+
+.home-search__clear {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(244, 239, 230, 0.1);
+  color: var(--ink);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.home-results {
+  margin-top: 0.65rem;
+  border-radius: 1.2rem;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg0) 55%, rgba(0, 0, 0, 0.35));
+  overflow: hidden;
+  animation: rise 280ms ease both;
+}
+
+.home-results__msg {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.home-results__msg--danger {
+  color: var(--danger);
+}
+
+.home-results__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+}
+
+.home-results__item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 0.75rem;
+  border: 0;
+  border-radius: 0.95rem;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background 140ms ease;
+}
+
+.home-results__item:active,
+.home-results__item:hover {
+  background: rgba(244, 239, 230, 0.07);
+}
+
+.home-results__pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  flex: 0 0 auto;
+}
+
+.home-results__name {
+  display: block;
+  font-weight: 800;
+  font-size: 0.98rem;
+}
+
+.home-results__meta {
+  display: -webkit-box;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-results__go {
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent-2);
+  flex: 0 0 auto;
+  opacity: 0.8;
+}
+
+.home__recent {
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.home__recent-title {
+  margin: 0 0 0.65rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: color-mix(in srgb, var(--ink) 82%, var(--muted));
+}
+
+.home__recent-empty {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.home-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-recent-list__row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-top: 1px solid var(--line);
+}
+
+.home-recent-list__link {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0.15rem;
+  text-decoration: none;
+}
+
+.home-recent-list__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.home-recent-list__open {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.brand-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-wordmark__text {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 @keyframes pop {

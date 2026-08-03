@@ -3,7 +3,13 @@ import type { VenueKind } from "./types";
 
 export type VenueTheme = {
   kind: VenueKind;
-  labelKey: "kindThemePark" | "kindMuseum" | "kindZoo" | "kindHistoric" | "kindOther";
+  labelKey:
+    | "kindThemePark"
+    | "kindMuseum"
+    | "kindZoo"
+    | "kindHistoric"
+    | "kindCity"
+    | "kindOther";
   bg0: string;
   bg1: string;
   panel: string;
@@ -67,6 +73,19 @@ const themes: Record<VenueKind, VenueTheme> = {
     muted: "#d8c4b4",
     mapGround0: "#3d2618",
     mapGround1: "#21120c",
+  },
+  city: {
+    kind: "city",
+    labelKey: "kindCity",
+    bg0: "#121826",
+    bg1: "#1c2740",
+    panel: "#243352",
+    accent: "#f0a35e",
+    accent2: "#7eb6d9",
+    ink: "#f2f0ea",
+    muted: "#b4c0d4",
+    mapGround0: "#1a2740",
+    mapGround1: "#0e1422",
   },
   other: {
     kind: "other",

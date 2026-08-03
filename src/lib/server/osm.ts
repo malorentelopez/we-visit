@@ -98,20 +98,25 @@ export async function nominatimSearch(query: string): Promise<SearchResult[]> {
       displayName: item.display_name,
       lat,
       lng,
-      bbox: parseBBox(
-        bb
-          ? `${item.boundingbox![0]},${item.boundingbox![1]},${item.boundingbox![2]},${item.boundingbox![3]}`
-          : undefined,
-        lat,
-        lng,
-      ),
+      bbox: parseBBox(bb, lat, lng),
       category: item.category || "tourism",
       type: item.type || "attraction",
     };
   });
 
+  // Surface cities/towns near the top when Nominatim returns mixed place types.
+  results.sort((a, b) => searchRank(a) - searchRank(b));
+
   cacheSet(key, results, 24 * 60 * 60 * 1000);
   return results;
+}
+
+function searchRank(result: SearchResult): number {
+  const kind = inferVenueKind(result.category, result.type);
+  if (kind === "city") return 0;
+  if (kind === "theme_park" || kind === "zoo") return 1;
+  if (kind === "museum" || kind === "historic") return 2;
+  return 3;
 }
 
 export type OverpassElement = {
@@ -161,10 +166,20 @@ export function inferVenueKind(
   type: string,
   tags: Record<string, string> = {},
 ): VenueKind {
-  const blob = `${category} ${type} ${tags.tourism ?? ""} ${tags.leisure ?? ""} ${tags.historic ?? ""}`.toLowerCase();
+  const blob = `${category} ${type} ${tags.tourism ?? ""} ${tags.leisure ?? ""} ${tags.historic ?? ""} ${tags.place ?? ""}`.toLowerCase();
   if (blob.includes("theme_park") || blob.includes("amusement")) return "theme_park";
   if (blob.includes("museum") || blob.includes("gallery")) return "museum";
   if (blob.includes("zoo") || blob.includes("aquarium")) return "zoo";
+  // Cities/towns before generic historic — Nominatim uses place=city|town|municipality
+  if (
+    /\b(city|town|municipality|village|suburb|borough)\b/.test(blob) ||
+    (category === "place" &&
+      /^(city|town|municipality|village|administrative)$/.test(type)) ||
+    type === "city" ||
+    type === "town"
+  ) {
+    return "city";
+  }
   if (blob.includes("historic") || blob.includes("castle") || blob.includes("monument"))
     return "historic";
   return "other";
@@ -172,6 +187,28 @@ export function inferVenueKind(
 
 export function buildPoiQuery(bbox: BBox, venueKind: VenueKind = "other"): string {
   const { south, west, north, east } = bbox;
+  if (venueKind === "city") {
+    // Focused city-core sightseeing + lunch options (avoid flooding Overpass).
+    return `
+[out:json][timeout:55];
+(
+  node["tourism"~"attraction|museum|artwork|gallery|viewpoint|zoo"]["name"](${south},${west},${north},${east});
+  way["tourism"~"attraction|museum|artwork|gallery|viewpoint|zoo"]["name"](${south},${west},${north},${east});
+  relation["tourism"~"museum|attraction"]["name"](${south},${west},${north},${east});
+  node["historic"~"monument|memorial|castle|palace|ruins|archaeological_site|city_gate|yes"]["name"](${south},${west},${north},${east});
+  way["historic"~"monument|memorial|castle|palace|ruins|archaeological_site|city_gate|yes"]["name"](${south},${west},${north},${east});
+  way["building"="museum"]["name"](${south},${west},${north},${east});
+  node["amenity"~"theatre|cinema|place_of_worship"]["name"]["tourism"](${south},${west},${north},${east});
+  node["amenity"~"theatre|cinema"]["name"](${south},${west},${north},${east});
+  way["leisure"="park"]["name"]["wikipedia"](${south},${west},${north},${east});
+  node["leisure"="park"]["name"]["wikipedia"](${south},${west},${north},${east});
+  node["amenity"~"restaurant|cafe|fast_food|food_court"]["name"](${south},${west},${north},${east});
+  way["amenity"~"restaurant|cafe|fast_food|food_court"]["name"](${south},${west},${north},${east});
+);
+out body center tags;
+`;
+  }
+
   const museumExtras =
     venueKind === "museum" || venueKind === "historic"
       ? `
@@ -218,8 +255,22 @@ out body center tags;
 `;
 }
 
-export function buildLayoutQuery(bbox: BBox): string {
+export function buildLayoutQuery(bbox: BBox, venueKind: VenueKind = "other"): string {
   const { south, west, north, east } = bbox;
+  if (venueKind === "city") {
+    return `
+[out:json][timeout:45];
+(
+  way["leisure"="park"]["name"](${south},${west},${north},${east});
+  relation["leisure"="park"]["name"](${south},${west},${north},${east});
+  way["place"~"neighbourhood|suburb|quarter"]["name"](${south},${west},${north},${east});
+  relation["place"~"neighbourhood|suburb|quarter"]["name"](${south},${west},${north},${east});
+  way["tourism"~"museum|attraction"]["name"](${south},${west},${north},${east});
+  way["historic"~"castle|palace|walls"]["name"](${south},${west},${north},${east});
+);
+out geom tags;
+`;
+  }
   return `
 [out:json][timeout:45];
 (

@@ -42,10 +42,9 @@ export function useVisitPack(sessionId: string) {
       const available = [
         ...new Set(normalized.attractions.map((a) => a.placeKind)),
       ];
-      const parkish =
-        normalized.venue.venueKind === "theme_park" ||
-        normalized.venue.venueKind === "zoo";
-      setKindFilters(defaultPlaceKindFilters(available, parkish));
+      setKindFilters(
+        defaultPlaceKindFilters(available, normalized.venue.venueKind),
+      );
     });
   }, [sessionId]);
 

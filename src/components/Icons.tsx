@@ -2,6 +2,7 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
+  Building2,
   Check,
   Clapperboard,
   Compass,
@@ -36,6 +37,7 @@ const kindIcons: Record<VenueKind, LucideIcon> = {
   museum: Landmark,
   zoo: PawPrint,
   historic: Landmark,
+  city: Building2,
   other: Trees,
 };
 

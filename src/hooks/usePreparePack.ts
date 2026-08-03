@@ -78,10 +78,9 @@ export function usePreparePack(placeId: string | null) {
         const available = [
           ...new Set(normalized.map((a) => a.placeKind)),
         ] as PlaceKind[];
-        const parkish =
-          data.venue.venueKind === "theme_park" ||
-          data.venue.venueKind === "zoo";
-        setKindFilters(defaultPlaceKindFilters(available, parkish));
+        setKindFilters(
+          defaultPlaceKindFilters(available, data.venue.venueKind),
+        );
         setPhase("review");
       } catch {
         if (!cancelled) {

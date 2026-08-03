@@ -3,6 +3,7 @@ export type VenueKind =
   | "museum"
   | "zoo"
   | "historic"
+  | "city"
   | "other";
 
 /** What kind of stop this is inside a venue (especially theme parks). */

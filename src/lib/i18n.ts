@@ -3,8 +3,8 @@ import type { Locale } from "./types";
 const dictionaries = {
   en: {
     brand: "We-Visit",
-    tagline: "Plan a smarter day out. Use it offline in the crowd.",
-    searchPlaceholder: "Search a park, museum, zoo…",
+    tagline: "Find a place. Walk it offline.",
+    searchPlaceholder: "Search a city, park, museum…",
     search: "Search",
     searching: "Searching…",
     recentVisits: "Recent visits",
@@ -87,6 +87,7 @@ const dictionaries = {
     kindMuseum: "Museum",
     kindZoo: "Zoo",
     kindHistoric: "Historic",
+    kindCity: "City",
     kindOther: "Place",
     photosNote: "Photos from Wikimedia / Wikipedia when available.",
     placeKindRide: "Rides",
@@ -119,8 +120,8 @@ const dictionaries = {
   },
   es: {
     brand: "We-Visit",
-    tagline: "Planifica un día mejor. Úsalo sin cobertura en la cola.",
-    searchPlaceholder: "Busca un parque, museo, zoo…",
+    tagline: "Busca un lugar. Síguelo sin red.",
+    searchPlaceholder: "Busca una ciudad, parque, museo…",
     search: "Buscar",
     searching: "Buscando…",
     recentVisits: "Visitas recientes",
@@ -203,6 +204,7 @@ const dictionaries = {
     kindMuseum: "Museo",
     kindZoo: "Zoo",
     kindHistoric: "Histórico",
+    kindCity: "Ciudad",
     kindOther: "Lugar",
     photosNote: "Fotos de Wikimedia / Wikipedia cuando hay.",
     placeKindRide: "Atracciones",

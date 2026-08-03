@@ -93,18 +93,28 @@ export async function POST(request: Request) {
       .filter((a) => a.placeKind === "restaurant")
       .map((a) => a.id);
 
+    const isCity = body.venueKind === "city";
     const prompt = [
-      "You are an expert theme-park / museum visit planner.",
+      isCity
+        ? "You are an expert city sightseeing planner for walking-friendly day itineraries."
+        : "You are an expert theme-park / museum visit planner.",
       "Create an optimized visit plan for the guest using ONLY the provided stop ids.",
-      "Do not invent stop ids. Prefer rope-drop / high-demand attractions early when useful.",
+      "Do not invent stop ids.",
+      isCity
+        ? "Prefer iconic landmarks and museums early when opening hours allow; cluster by neighbourhood to cut walking."
+        : "Prefer rope-drop / high-demand attractions early when useful.",
       "Cluster nearby stops to reduce walking.",
       "Respect party type (kids/mixed/adults), pace, and must-see ids.",
-      "Main stops should focus on rides/shows/exhibits. Restaurants are mainly for lunch choice.",
+      isCity
+        ? "Main stops should focus on exhibits, landmarks, viewpoints, and parks. Restaurants are mainly for lunch choice."
+        : "Main stops should focus on rides/shows/exhibits. Restaurants are mainly for lunch choice.",
       "Prefer a full day: include enough main stops to fill the visit hours.",
       "You may omit low-value shops/services, but do not leave large empty gaps in the afternoon.",
       "Include every must-see id. Keep the main stop list between the min and max stop counts.",
       "Also choose the best lunch: after which attraction, which restaurant id (if any from the list), label, and tip.",
-      "Also suggest up to 5 sideVisits worth seeing aside from the main plan (shops, viewpoints, exhibits, food spots) using provided ids when possible.",
+      isCity
+        ? "Also suggest up to 5 sideVisits worth seeing aside from the main plan (viewpoints, shops, food spots, parks) using provided ids when possible."
+        : "Also suggest up to 5 sideVisits worth seeing aside from the main plan (shops, viewpoints, exhibits, food spots) using provided ids when possible.",
       "For each main stop, add guest-facing requirements and an optional tip.",
       "Requirements must prefer facts from the provided fields (minHeight, openingHours, accessNote, description).",
       "Never invent hard safety rules like minimum height if minHeight is missing.",
