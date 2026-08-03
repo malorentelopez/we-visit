@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Attribution } from "@/components/Attribution";
-import { BrandMark } from "@/components/BrandMark";
+import { BrandLogo } from "@/components/BrandMark";
 import { UiIcons } from "@/components/Icons";
 import { ThemeShell } from "@/components/ThemeShell";
 import { useApp } from "@/components/Providers";
@@ -127,8 +127,9 @@ export function HomeClient() {
               <circle cx="312" cy="24" r="5" fill="var(--accent)" />
             </svg>
           </div>
-          <BrandMark className="home__mark" />
-          <h1 className="home__brand">{tr("brand")}</h1>
+          <h1 className="home__logo">
+            <BrandLogo size="hero" />
+          </h1>
           <p className="home__tagline">{tr("tagline")}</p>
         </header>
 

@@ -2,7 +2,7 @@ import type { Locale } from "./types";
 
 const dictionaries = {
   en: {
-    brand: "We-Visit",
+    brand: "We Visit",
     tagline: "Find a place. Walk it offline.",
     searchPlaceholder: "Search a city, park, museum…",
     search: "Search",
@@ -119,7 +119,7 @@ const dictionaries = {
     deleteVisitConfirm: "Delete this visit from this phone? This cannot be undone.",
   },
   es: {
-    brand: "We-Visit",
+    brand: "We Visit",
     tagline: "Busca un lugar. Síguelo sin red.",
     searchPlaceholder: "Busca una ciudad, parque, museo…",
     search: "Buscar",
