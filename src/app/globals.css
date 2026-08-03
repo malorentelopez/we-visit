@@ -678,30 +678,122 @@ select {
   }
 }
 
-.home__mark {
-  width: 4.25rem;
-  height: 4.25rem;
-  margin-bottom: 0.85rem;
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.28));
+.home__logo {
+  margin: 0;
   animation: pop 520ms ease both;
 }
 
-.home__brand {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(2.75rem, 11vw, 3.6rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 0.95;
-  color: var(--ink);
-}
-
 .home__tagline {
-  margin: 0.7rem 0 0;
+  margin: 0.85rem 0 0;
   max-width: 16rem;
   font-size: 0.95rem;
   line-height: 1.35;
   color: var(--muted);
+}
+
+.brand-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: transparent;
+  user-select: none;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.brand-logo__mark-wrap {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 22%;
+  background: #0a342f;
+  line-height: 0;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
+}
+
+.brand-logo__mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scale(1.02);
+}
+
+.brand-logo__word {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 0.88;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.brand-logo__we {
+  color: color-mix(in srgb, var(--ink) 72%, var(--accent-2));
+}
+
+.brand-logo__visit {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-start;
+  color: var(--ink);
+}
+
+.brand-logo__dot {
+  position: absolute;
+  top: 0.12em;
+  right: -0.28em;
+  width: 0.22em;
+  height: 0.22em;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bg0) 40%, transparent);
+}
+
+.brand-logo--hero .brand-logo__mark-wrap {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.brand-logo--hero .brand-logo__we {
+  font-size: clamp(1.55rem, 5.5vw, 1.9rem);
+}
+
+.brand-logo--hero .brand-logo__visit {
+  font-size: clamp(2.55rem, 10vw, 3.35rem);
+}
+
+.brand-logo--compact {
+  gap: 0.55rem;
+}
+
+.brand-logo--compact .brand-logo__mark-wrap {
+  width: 2.35rem;
+  height: 2.35rem;
+  box-shadow: none;
+}
+
+.brand-logo--compact .brand-logo__word {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 0.28rem;
+  line-height: 1;
+}
+
+.brand-logo--compact .brand-logo__we,
+.brand-logo--compact .brand-logo__visit {
+  font-size: 1.2rem;
+}
+
+.brand-logo--compact .brand-logo__dot {
+  top: 0.08em;
+  right: -0.32em;
+  width: 0.18em;
+  height: 0.18em;
 }
 
 .home__search-block {
@@ -931,20 +1023,6 @@ select {
   font-size: 0.85rem;
   font-weight: 800;
   color: var(--accent);
-}
-
-.brand-wordmark {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.brand-wordmark__text {
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1;
 }
 
 @keyframes pop {

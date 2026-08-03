@@ -3,19 +3,20 @@ import { Providers } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "We-Visit",
+  title: "We Visit",
   description: "Plan and follow venue visits offline",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
+      { url: "/logo.png", type: "image/png" },
       { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/logo.png", type: "image/png" }],
   },
   appleWebApp: {
     capable: true,
-    title: "We-Visit",
+    title: "We Visit",
     statusBarStyle: "black-translucent",
   },
 };

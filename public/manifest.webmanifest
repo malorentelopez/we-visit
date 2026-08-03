@@ -1,6 +1,6 @@
 {
-  "name": "We-Visit",
-  "short_name": "We-Visit",
+  "name": "We Visit",
+  "short_name": "We Visit",
   "description": "Plan and follow venue visits offline",
   "start_url": "/",
   "display": "standalone",
