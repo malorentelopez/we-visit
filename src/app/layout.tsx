@@ -6,14 +6,26 @@ export const metadata: Metadata = {
   title: "We-Visit",
   description: "Plan and follow venue visits offline",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
   appleWebApp: {
     capable: true,
     title: "We-Visit",
+    statusBarStyle: "black-translucent",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0f2e2a",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0f2e2a" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f2e2a" },
+  ],
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

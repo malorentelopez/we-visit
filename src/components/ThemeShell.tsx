@@ -16,7 +16,7 @@ export function ThemeShell({
   const theme = themeForKind(kind);
   return (
     <div
-      className={`flex min-h-dvh flex-1 flex-col ${className}`.trim()}
+      className={`app-shell flex min-h-dvh flex-1 flex-col ${className}`.trim()}
       data-venue-kind={theme.kind}
       style={themeStyleVars(theme)}
     >

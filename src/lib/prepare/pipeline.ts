@@ -1,6 +1,6 @@
 import { extractConstraintsFromTags } from "../constraints";
 import { bboxFromCenter, expandBBox, projectToLayout } from "../geo";
-import { classifyPlaceKind, placeKindPriority } from "../placeKind";
+import { placeKindForVenue, placeKindPriority } from "../placeKind";
 import { enrichFromTags } from "../server/media";
 import {
   buildLayoutQuery,
@@ -41,6 +41,7 @@ function scoreAttraction(
   tags: Record<string, string>,
   name: string,
   placeKind: PlaceKind,
+  venueKind: VenueKind,
 ): number {
   let score = 35;
   if (tags.wikipedia || tags.wikidata) score += 25;
@@ -50,6 +51,8 @@ function scoreAttraction(
   if (tags.opening_hours) score += 5;
   if (tags.tourism === "attraction" || tags.attraction) score += 10;
   if (tags.tourism === "museum" || tags.tourism === "theme_park") score += 8;
+  if (tags.historic) score += venueKind === "city" ? 12 : 6;
+  if (tags.tourism === "viewpoint") score += venueKind === "city" ? 10 : 4;
   if (name.length > 3) score += 5;
   const thrill = `${tags.attraction ?? ""} ${tags.name ?? ""}`.toLowerCase();
   if (
@@ -57,22 +60,22 @@ function scoreAttraction(
     thrill.includes("coaster") ||
     thrill.includes("montaña")
   ) {
-    score += 8;
+    score += venueKind === "city" ? -6 : 8;
   }
 
-  // Keep rides ahead of food/shops in default ranking for parks
+  // Parks: rides first. Cities: exhibits/landmarks first.
   switch (placeKind) {
     case "ride":
-      score += 12;
+      score += venueKind === "city" ? 2 : 12;
       break;
     case "show":
       score += 6;
       break;
     case "exhibit":
-      score += 4;
+      score += venueKind === "city" ? 14 : 4;
       break;
     case "restaurant":
-      score -= 8;
+      score -= venueKind === "city" ? 4 : 8;
       break;
     case "shop":
       score -= 18;
@@ -81,6 +84,7 @@ function scoreAttraction(
       score -= 28;
       break;
     case "other":
+      score += venueKind === "city" ? 4 : 0;
       break;
     default: {
       const _exhaustive: never = placeKind;
@@ -93,19 +97,25 @@ function scoreAttraction(
 
 function estimateMinutes(
   tags: Record<string, string>,
-  venueKind: string,
+  venueKind: VenueKind,
   placeKind: PlaceKind,
 ): number {
-  if (placeKind === "restaurant") return 40;
+  if (placeKind === "restaurant") return venueKind === "city" ? 55 : 40;
   if (placeKind === "shop") return 15;
   if (placeKind === "service") return 5;
   if (placeKind === "show") return 30;
-  if (tags.tourism === "museum" || venueKind === "museum") return 35;
-  if (tags.tourism === "artwork" || placeKind === "exhibit") return 15;
+  if (tags.tourism === "museum" || venueKind === "museum") {
+    return venueKind === "city" ? 75 : 35;
+  }
+  if (tags.historic && venueKind === "city") return 40;
+  if (tags.tourism === "artwork" || placeKind === "exhibit") {
+    return venueKind === "city" ? 35 : 15;
+  }
   if (tags.attraction || tags.tourism === "attraction" || placeKind === "ride")
-    return 25;
-  if (tags.tourism === "viewpoint") return 15;
-  return 20;
+    return venueKind === "city" ? 40 : 25;
+  if (tags.tourism === "viewpoint") return 20;
+  if (tags.leisure === "park") return venueKind === "city" ? 45 : 20;
+  return venueKind === "city" ? 35 : 20;
 }
 
 function categoryFromTags(tags: Record<string, string>, placeKind: PlaceKind): string {
@@ -129,19 +139,34 @@ function capByPlaceKind(
   venueKind: VenueKind,
   totalCap: number,
 ): Attraction[] {
-  if (venueKind !== "theme_park" && venueKind !== "zoo") {
+  if (
+    venueKind !== "theme_park" &&
+    venueKind !== "zoo" &&
+    venueKind !== "city"
+  ) {
     return items.slice(0, totalCap);
   }
 
-  const budgets: Record<PlaceKind, number> = {
-    ride: 45,
-    show: 10,
-    exhibit: 10,
-    restaurant: 12,
-    shop: 8,
-    service: 5,
-    other: 5,
-  };
+  const budgets: Record<PlaceKind, number> =
+    venueKind === "city"
+      ? {
+          ride: 8,
+          show: 8,
+          exhibit: 40,
+          restaurant: 14,
+          shop: 4,
+          service: 2,
+          other: 14,
+        }
+      : {
+          ride: 45,
+          show: 10,
+          exhibit: 10,
+          restaurant: 12,
+          shop: 8,
+          service: 5,
+          other: 5,
+        };
 
   const taken: Attraction[] = [];
   const counts: Partial<Record<PlaceKind, number>> = {};
@@ -176,9 +201,18 @@ function normalizeName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function resolveBBox(result: SearchResult, venueKind: string): BBox {
+function resolveBBox(result: SearchResult, venueKind: VenueKind): BBox {
   const spanLat = result.bbox.north - result.bbox.south;
   const spanLng = result.bbox.east - result.bbox.west;
+
+  // City admin boxes are huge — plan around a walkable core near the pin.
+  if (venueKind === "city") {
+    if (spanLat > 0.06 || spanLng > 0.06) {
+      return bboxFromCenter(result.lat, result.lng, 4.5);
+    }
+    return expandBBox(result.bbox, 0.02);
+  }
+
   if (spanLat > 0.0005 && spanLng > 0.0005) {
     return expandBBox(result.bbox, venueKind === "museum" ? 0.05 : 0.12);
   }
@@ -247,7 +281,7 @@ export async function prepareVenue(result: SearchResult): Promise<PrepareRespons
 
   const [poiElements, layoutElements] = await Promise.all([
     overpassQuery(buildPoiQuery(bbox, venueKind)),
-    overpassQuery(buildLayoutQuery(bbox)),
+    overpassQuery(buildLayoutQuery(bbox, venueKind)),
   ]);
 
   const seen = new Set<string>();
@@ -266,13 +300,16 @@ export async function prepareVenue(result: SearchResult): Promise<PrepareRespons
     // Skip the venue itself as an attraction when names match closely
     if (
       normalizeName(name) === normalizeName(result.name) &&
-      (tags.tourism === "theme_park" || tags.tourism === "museum" || tags.tourism === "zoo")
+      (tags.tourism === "theme_park" ||
+        tags.tourism === "museum" ||
+        tags.tourism === "zoo" ||
+        venueKind === "city")
     ) {
       continue;
     }
 
     const id = `${el.type}/${el.id}`;
-    const placeKind = classifyPlaceKind(tags);
+    const placeKind = placeKindForVenue(tags, venueKind);
     const constraints = extractConstraintsFromTags(tags);
     attractions.push({
       id,
@@ -282,7 +319,7 @@ export async function prepareVenue(result: SearchResult): Promise<PrepareRespons
       lng: center.lng,
       placeKind,
       category: categoryFromTags(tags, placeKind),
-      worthScore: scoreAttraction(tags, name, placeKind),
+      worthScore: scoreAttraction(tags, name, placeKind, venueKind),
       estimatedMinutes: estimateMinutes(tags, venueKind, placeKind),
       openingHours: constraints.openingHours,
       minHeight: constraints.minHeight,
@@ -292,7 +329,7 @@ export async function prepareVenue(result: SearchResult): Promise<PrepareRespons
   }
 
   // Always keep the venue itself as a stop when POIs are thin (common for museums).
-  if (attractions.length < 6) {
+  if (attractions.length < 6 && venueKind !== "city") {
     attractions.unshift({
       id: `${result.osmType}/${result.osmId}`,
       venueId,
@@ -309,11 +346,14 @@ export async function prepareVenue(result: SearchResult): Promise<PrepareRespons
 
   attractions.sort((a, b) => b.worthScore - a.worthScore);
 
-  // Cap for phone UX / offline size; keep a mix of kinds in parks
-  const capped = capByPlaceKind(attractions, venueKind, 80);
+  // Cap for phone UX / offline size; keep a mix of kinds in parks/cities
+  const capped = capByPlaceKind(attractions, venueKind, venueKind === "city" ? 90 : 80);
   const sparse =
-    capped.filter((a) => a.placeKind === "ride" || a.placeKind === "exhibit")
-      .length < 6;
+    capped.filter((a) =>
+      venueKind === "city"
+        ? a.placeKind === "exhibit" || a.placeKind === "other"
+        : a.placeKind === "ride" || a.placeKind === "exhibit",
+    ).length < 6;
 
   // Enrich top attractions + venue with free Wikipedia/Commons media (parallel)
   const enrichCount = Math.min(18, capped.length);

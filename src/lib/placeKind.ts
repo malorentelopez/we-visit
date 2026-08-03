@@ -1,4 +1,4 @@
-import type { PlaceKind } from "./types";
+import type { PlaceKind, VenueKind } from "./types";
 
 export function classifyPlaceKind(tags: Record<string, string>): PlaceKind {
   const amenity = (tags.amenity ?? "").toLowerCase();
@@ -131,10 +131,33 @@ export const PLACE_KIND_FILTERS: PlaceKind[] = [
 
 export function defaultPlaceKindFilters(
   available: PlaceKind[],
-  venueIsPark: boolean,
+  venueKind: VenueKind,
 ): PlaceKind[] {
-  if (!venueIsPark) return available;
-  const preferred: PlaceKind[] = ["ride", "show", "exhibit", "restaurant"];
-  const selected = preferred.filter((kind) => available.includes(kind));
+  const preferred: PlaceKind[] | null =
+    venueKind === "theme_park" || venueKind === "zoo"
+      ? ["ride", "show", "exhibit", "restaurant"]
+      : venueKind === "city"
+        ? ["exhibit", "other", "show", "restaurant"]
+        : null;
+
+  if (!preferred) return available;
+  const selected = preferred.filter((k) => available.includes(k));
   return selected.length > 0 ? selected : available;
+}
+
+/** In cities, OSM "attraction" tags are landmarks — not park rides. */
+export function placeKindForVenue(
+  tags: Record<string, string>,
+  venueKind: VenueKind,
+): PlaceKind {
+  const kind = classifyPlaceKind(tags);
+  if (venueKind === "city" && kind === "ride") return "exhibit";
+  if (
+    venueKind === "city" &&
+    kind === "other" &&
+    (tags.leisure === "park" || tags.historic)
+  ) {
+    return "exhibit";
+  }
+  return kind;
 }

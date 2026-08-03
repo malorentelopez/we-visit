@@ -33,8 +33,9 @@ function preferenceScore(attraction: Attraction, prefs: VisitPrefs): number {
     if (thrill) score += 8;
   }
 
-  // Prefer rides/shows in the day plan; food/shops are secondary
+  // Prefer rides/shows (parks) or exhibits (cities); food/shops secondary
   if (kind === "ride") score += 10;
+  else if (kind === "exhibit") score += 8;
   else if (kind === "show") score += 4;
   else if (kind === "restaurant") score -= 6;
   else if (kind === "shop") score -= 20;
